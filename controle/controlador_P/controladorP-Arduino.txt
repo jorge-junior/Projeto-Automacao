@@ -1,0 +1,55 @@
+const int pwmPin = 5;   // Pino PWM conectado ao driver do ventilador
+const int sensorPin = A0; // Exemplo: sensor analógico (modifique conforme seu sensor)
+
+double setpoint = 20.0; // posição desejada (cm)
+double Kp = 3.0;        // ganho proporcional
+
+double lerPosicao() {
+    // Exemplo genérico para sensor analógico
+    int leitura = analogRead(sensorPin);
+
+    // Converter leitura para cm — você ajusta esta fórmula!
+    // Exemplo fictício:
+    double posicao_cm = (leitura / 1023.0) * 30.0;
+
+    return posicao_cm;
+}
+
+double controladorP(double setpoint, double medicao) {
+    double erro = setpoint - medicao;
+    double pwm = Kp * erro;
+
+    // Saturação (0–255)
+    if (pwm > 255) pwm = 255;
+    if (pwm < 0)   pwm = 0;
+
+    return pwm;
+}
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(pwmPin, OUTPUT);
+    pinMode(sensorPin, INPUT);
+
+    Serial.println("Controlador P iniciado...");
+}
+
+void loop() {
+    // 1. Ler posição da bolinha
+    double posAtual = lerPosicao();
+
+    // 2. Calcular PWM
+    double pwm = controladorP(setpoint, posAtual);
+
+    // 3. Enviar PWM
+    analogWrite(pwmPin, (int)pwm);
+
+    // 4. Debug no monitor serial
+    Serial.print("Posicao: ");
+    Serial.print(posAtual);
+    Serial.print(" cm | PWM: ");
+    Serial.println(pwm);
+
+    // 5. Frequência de controle (50 Hz → 20 ms)
+    delay(20);
+}
